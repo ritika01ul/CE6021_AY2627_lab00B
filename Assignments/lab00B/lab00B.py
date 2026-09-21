@@ -65,7 +65,7 @@ class ConvolutionInterpolator:
         boundary = kwargs.pop('boundary', 'symm')
         fillvalue = kwargs.pop('fillvalue', 0)
 
-        # Use scipy.signal.convolve2d with provided arguments
+        # using parameters like mode, boundary and fillvalue in covolve2d  function
         return convolve2d(image, kernel, mode=mode, boundary=boundary, fillvalue=fillvalue)
 
     def interpolate(self, image, **kwargs):
@@ -84,6 +84,7 @@ class ConvolutionInterpolator:
         Returns:
             ndarray: Resampled image, shape scaled by scale_factor.
         """
+        #creating vars - scale factor and order with default values 
         scale_factor = kwargs.pop('scale_factor', 0.5)
         order = kwargs.pop('order', 0)
 
