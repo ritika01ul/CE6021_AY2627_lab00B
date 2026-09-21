@@ -1,34 +1,7 @@
-# -*- coding: utf-8 -*-
-"""Lab 00B — Introduction: Gaussian Kernels, Convolution & Interpolation.
-
-Building on Lab 00's class/method workflow, this lab gets you comfortable
-with three numpy/skimage building blocks used throughout the rest of the
-series: constructing a filter kernel from a 1D formula, applying it as a
-2D convolution, and resampling an image with interpolation.
-
-Task
-----
-Implement the three methods inside the ConvolutionInterpolator class:
-
-  gaussian_kernel_2d(sigma)
-      Build a 2D Gaussian kernel from the outer product of a 1D Gaussian.
-      The kernel size K is not a separate input — it's derived from sigma
-      using the ±3σ rule of thumb.
-
-  convolve(image, kernel, **kwargs)
-      Convolve a 2D image with a kernel using scipy.signal.convolve2d,
-      using the 'mode' keyword argument (default 'same') to control the
-      output size and 'boundary' (default 'symm') to control padding.
-
-  interpolate(image, **kwargs)
-      Resample a 2D image using skimage.transform.rescale, using the
-      'scale_factor' (default 0.5) and 'order' (default 0) keyword
-      arguments. Anti-aliasing must stay switched off — this method should
-      perform interpolation ONLY, with no implicit smoothing of its own.
-"""
 import numpy as np
 from scipy.signal import convolve2d
 from skimage.transform import rescale
+
 
 class ConvolutionInterpolator:
     """Small helper class for building Gaussian kernels and applying
@@ -58,7 +31,17 @@ class ConvolutionInterpolator:
         Returns:
             ndarray: K x K kernel, dtype float, normalised to sum to 1.
         """
-        raise NotImplementedError("Implement this method")
+        # Calculate half and K based on the 3-sigma rule
+        half = int(np.ceil(3 * sigma))
+        K = 2 * half + 1
+
+        # Generate 1D Gaussian samples
+        x = np.arange(-half, half + 1, dtype=float)
+        g_x = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-x**2 / (2 * sigma**2))
+
+        # Build 2D kernel using outer product and normalize
+        kernel_2d = np.outer(g_x, g_x)
+        return kernel_2d / np.sum(kernel_2d)
 
     def convolve(self, image, kernel, **kwargs):
         """Convolve a 2D image with a kernel.
@@ -78,7 +61,12 @@ class ConvolutionInterpolator:
             ndarray: Filtered image — same shape as the input under the
             default mode='same', or a different shape for 'valid'/'full'.
         """
-        raise NotImplementedError("Implement this method")
+        mode = kwargs.pop('mode', 'same')
+        boundary = kwargs.pop('boundary', 'symm')
+        fillvalue = kwargs.pop('fillvalue', 0)
+
+        # Use scipy.signal.convolve2d with provided arguments
+        return convolve2d(image, kernel, mode=mode, boundary=boundary, fillvalue=fillvalue)
 
     def interpolate(self, image, **kwargs):
         """Resample a 2D image by a given scale factor.
@@ -96,4 +84,8 @@ class ConvolutionInterpolator:
         Returns:
             ndarray: Resampled image, shape scaled by scale_factor.
         """
-        raise NotImplementedError("Implement this method")
+        scale_factor = kwargs.pop('scale_factor', 0.5)
+        order = kwargs.pop('order', 0)
+
+        # Use skimage.transform.rescale with anti_aliasing=False and mode='reflect'
+        return rescale(image, scale_factor, order=order, anti_aliasing=False, mode='reflect')
